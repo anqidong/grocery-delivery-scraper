@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library" exported="">
+      <library name="Selenium">
+        <CLASSES>
+          <root url="jar://$USER_HOME$/bin/selenium-java/client-combined-3.141.59.jar!/" />
+          <root url="jar://$USER_HOME$/bin/selenium-java/libs/byte-buddy-1.8.15.jar!/" />
+          <root url="jar://$USER_HOME$/bin/selenium-java/libs/commons-exec-1.3.jar!/" />
+          <root url="jar://$USER_HOME$/bin/selenium-java/libs/guava-25.0-jre.jar!/" />
+          <root url="jar://$USER_HOME$/bin/selenium-java/libs/okhttp-3.11.0.jar!/" />
+          <root url="jar://$USER_HOME$/bin/selenium-java/libs/okio-1.14.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/bin/selenium-java/client-combined-3.141.59-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/annotations/19.0.0/annotations-19.0.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>

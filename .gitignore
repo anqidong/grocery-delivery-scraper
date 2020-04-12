@@ -1,0 +1,4 @@
+out
+.idea
+*/*.creds
+!*/example.creds
