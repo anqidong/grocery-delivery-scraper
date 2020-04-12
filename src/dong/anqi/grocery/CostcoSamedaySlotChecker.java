@@ -1,3 +1,5 @@
+package dong.anqi.grocery;
+
 import com.google.common.collect.ImmutableSet;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -8,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class CostcoSamedaySeleniumQuerier extends AbstractGrocerySlotChecker {
+public class CostcoSamedaySlotChecker extends AbstractGrocerySlotChecker {
   private boolean lastWasAvailable = false;
 
-  public CostcoSamedaySeleniumQuerier(Logger logger) {
+  public CostcoSamedaySlotChecker(Logger logger) {
     super("Costco", logger);
 
     driver.get(HOME_PAGE);
@@ -73,7 +75,7 @@ public class CostcoSamedaySeleniumQuerier extends AbstractGrocerySlotChecker {
     }
 
     // TODO this should be a page loaded waiter in case site is bogged down
-    Utils.startInterruptibleSleep(Duration.ofSeconds(10));
+    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
     List<WebElement> deliveryElements =
         driver.findElements(By.cssSelector("a[href~=\"/costco/info?tab=delivery\"]"));

@@ -1,3 +1,5 @@
+package dong.anqi.grocery;
+
 import com.google.common.collect.ImmutableSet;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -7,10 +9,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
+public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
   private boolean lastWasAvailable = false;
 
-  public ShiptSeleniumQuerier(Logger logger) {
+  public ShiptSlotChecker(Logger logger) {
     super("Shipt", logger);
   }
 
@@ -65,7 +67,7 @@ public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
     }
 
     // TODO this should be a page loaded waiter in case site is bogged down
-    Utils.startInterruptibleSleep(Duration.ofSeconds(10));
+    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
     List<WebElement> deliveryElements =
         driver.findElements(By.cssSelector("div[data-test~=\"NextDeliveryWindow-text\"]"));

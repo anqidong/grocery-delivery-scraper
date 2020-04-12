@@ -1,3 +1,5 @@
+package dong.anqi.grocery;
+
 import com.google.common.collect.ImmutableList;
 
 import javax.swing.*;
@@ -10,7 +12,7 @@ import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class CheckerHostApp {
+public class CheckerHostRunner {
   private static void rateLimitSleep() {
     // Try fairly hard to ensure that we sleep for long enough
     for (int i = 0; i < 5; i++) {
@@ -73,8 +75,8 @@ public class CheckerHostApp {
     };
 
     List<GrocerySlotChecker> checkers = ImmutableList.of(
-        new ShiptSeleniumQuerier(logger),
-        new CostcoSamedaySeleniumQuerier(logger)
+        new ShiptSlotChecker(logger),
+        new CostcoSamedaySlotChecker(logger)
     );
 
     ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(3);

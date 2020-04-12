@@ -1,3 +1,5 @@
+package dong.anqi.grocery;
+
 import java.util.Optional;
 
 public interface GrocerySlotChecker extends AutoCloseable {

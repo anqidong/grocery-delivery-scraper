@@ -1,3 +1,5 @@
+package dong.anqi.grocery;
+
 public interface Logger {
   default void log(String s) {
     System.out.println(s);
