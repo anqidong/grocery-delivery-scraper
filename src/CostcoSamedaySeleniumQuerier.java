@@ -1,5 +1,6 @@
 import com.google.common.collect.ImmutableSet;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebElement;
 
 import java.time.Duration;
@@ -7,11 +8,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
+public class CostcoSamedaySeleniumQuerier extends AbstractGrocerySlotChecker {
   private boolean lastWasAvailable = false;
 
-  public ShiptSeleniumQuerier(Logger logger) {
-    super("Shipt", logger);
+  public CostcoSamedaySeleniumQuerier(Logger logger) {
+    super("Costco", logger);
+
+    driver.get(HOME_PAGE);
+    driver.manage().addCookie(
+        new Cookie.Builder("memberPrimaryPostal", "95134").domain("costco.com").build());
+    driver.manage().addCookie(
+        new Cookie.Builder("direct_retailer_zip_code", "95134").domain("sameday.costco.com")
+            .build());
   }
 
   @Override
@@ -19,15 +27,15 @@ public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
     return lastWasAvailable;
   }
 
-  private static final String CREDS_PATH = "creds/shipt.creds";
+  private static final String CREDS_PATH = "creds/costco.creds";
 
-  private static final String LOGIN_PAGE = "https://shop.shipt.com/login";
-  private static final String HOME_PAGE = "https://shop.shipt.com/";
+  private static final String LOGIN_PAGE = "https://www.costco.com/logon-instacart";
+  private static final String HOME_PAGE = "https://sameday.costco.com/store/costco/storefront";
 
-  private static final Set<String> ACCEPTED_HOME_URLS =
-      ImmutableSet.of("https://shop.shipt.com/", "https://shop.shipt.com");
+  private static final Set<String> ACCEPTED_HOME_URLS = ImmutableSet
+      .of(HOME_PAGE, "https://sameday.costco.com/store/");
   private static final Set<String> UNAVAILABLE_TEXT =
-      ImmutableSet.of("Not available", "Check back soon");
+      ImmutableSet.of("Not available", "See delivery times");
 
   private void executeLogin() {
     driver.get(LOGIN_PAGE);
@@ -38,9 +46,9 @@ public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
 
       // TODO: Set values using JavascriptExecutor so we can run headless
       Utils.Credentials creds = Utils.readCredentials(CREDS_PATH);
-      driver.findElement(By.id("username")).sendKeys(creds.user);
-      driver.findElement(By.id("password")).sendKeys(creds.pass);
-      driver.findElement(By.id("password")).submit();
+      driver.findElement(By.id("logonId")).sendKeys(creds.user);
+      driver.findElement(By.id("logonPassword")).sendKeys(creds.pass);
+      driver.findElement(By.id("logonPassword")).submit();
 
       Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
@@ -68,9 +76,9 @@ public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
     Utils.startInterruptibleSleep(Duration.ofSeconds(10));
 
     List<WebElement> deliveryElements =
-        driver.findElements(By.cssSelector("div[data-test~=\"NextDeliveryWindow-text\"]"));
+        driver.findElements(By.cssSelector("a[href~=\"/costco/info?tab=delivery\"]"));
     if (deliveryElements.size() != 1) {
-      logErr("Non-unique NextDeliveryWindow div, found " + deliveryElements.size());
+      logErr("Non-unique delivery time <a>, found " + deliveryElements.size());
     }
     if (deliveryElements.isEmpty()) {
       logErr("No delivery info found");
@@ -78,7 +86,7 @@ public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
     }
 
     String availabilityText =
-        deliveryElements.get(0).findElement(By.cssSelector("[class*=\"body\"]")).getText();
+        deliveryElements.get(0).findElement(By.tagName("span")).getText();
     boolean slotAvailable = !UNAVAILABLE_TEXT.contains(availabilityText);
 
     Status status = new Status();
@@ -86,15 +94,13 @@ public class ShiptSeleniumQuerier extends AbstractGrocerySlotChecker {
     status.isEdgeTransition = (lastWasAvailable != slotAvailable);
 
     if (slotAvailable) {
-      String message = "Spots available for " + availabilityText;
+      String message = "Spots available for " + availabilityText.replace("Arrives ", "");
       status.notificationMessage = Optional.of(message);
       log(message);
     } else {
       status.notificationMessage = Optional.empty();
       log("no slots");
     }
-
-    lastWasAvailable = slotAvailable;
 
     return status;
   }

@@ -72,7 +72,10 @@ public class CheckerHostApp {
       }
     };
 
-    List<GrocerySlotChecker> checkers = ImmutableList.of(new ShiptSeleniumQuerier(logger));
+    List<GrocerySlotChecker> checkers = ImmutableList.of(
+        new ShiptSeleniumQuerier(logger),
+        new CostcoSamedaySeleniumQuerier(logger)
+    );
 
     ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(3);
     for (GrocerySlotChecker checker : checkers) {
@@ -82,7 +85,7 @@ public class CheckerHostApp {
           if (status.isEdgeTransition) {
             String message = status.notificationMessage.orElse(
                 "slot status: " + (status.slotFound ? "available" : getRandomNoString())) +
-                (status.slotFound ? "go go go" : "");
+                (status.slotFound ? " go go go" : "");
 
             generateNotification(checker.getDescription(), message);
           }
