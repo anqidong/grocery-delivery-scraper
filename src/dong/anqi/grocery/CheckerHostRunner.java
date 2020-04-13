@@ -67,6 +67,7 @@ public class CheckerHostRunner {
     System.setProperty("webdriver.chrome.driver", "/home/anqid/bin/chromedriver");
 
     StatusDialog dialog = new StatusDialog();
+    TwitterClient twitterClient = new TwitterClient();
     Logger logger = new Logger() {
       @Override
       public void log(String s) {
@@ -90,6 +91,9 @@ public class CheckerHostRunner {
                 (status.slotFound ? " go go go" : "");
 
             generateNotification(checker.getDescription(), message);
+            if (status.slotFound) {
+              twitterClient.sendDirectMessage(checker.getDescription() + ": " + message);
+            }
           }
         } catch (Exception e) {
           e.printStackTrace();
