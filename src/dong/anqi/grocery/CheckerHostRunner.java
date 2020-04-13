@@ -64,7 +64,7 @@ public class CheckerHostRunner {
   }
 
   public static void main(String[] args) {
-    System.setProperty("webdriver.chrome.driver", "/home/anqid/bin/chromedriver");
+    System.setProperty("webdriver.chrome.driver", System.getProperty("user.home") + "/bin/chromedriver");
 
     StatusDialog dialog = new StatusDialog();
     TwitterClient twitterClient = new TwitterClient();

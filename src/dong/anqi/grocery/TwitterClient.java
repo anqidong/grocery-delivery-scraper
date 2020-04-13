@@ -28,7 +28,6 @@ public class TwitterClient {
 
   private static final int MAX_DM_CHARS = 1000;
 
-  private static final String DEFAULT_USER = "SafeVarargs";
   private static final long DEFAULT_USER_ID = 2783502499L;
   public boolean sendDirectMessage(String message) {
     try {
@@ -36,8 +35,7 @@ public class TwitterClient {
         message = message.substring(0, MAX_DM_CHARS);
       }
 
-      DirectMessage result = twitterInstance.sendDirectMessage(DEFAULT_USER, message);
-      System.out.println("sender " + result.getSenderId() + " recip " + result.getRecipientId());
+      DirectMessage result = twitterInstance.sendDirectMessage(DEFAULT_USER_ID, message);
       return true;
     } catch (TwitterException te) {
       te.printStackTrace();
