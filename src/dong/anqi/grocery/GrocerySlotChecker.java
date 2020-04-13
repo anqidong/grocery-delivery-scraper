@@ -1,5 +1,6 @@
 package dong.anqi.grocery;
 
+import java.time.Duration;
 import java.util.Optional;
 
 public interface GrocerySlotChecker extends AutoCloseable {
@@ -16,4 +17,6 @@ public interface GrocerySlotChecker extends AutoCloseable {
   }
 
   Status doCheck();
+
+  default Duration getPreferredCheckFrequency() { return Duration.ofMinutes(4); }
 }
