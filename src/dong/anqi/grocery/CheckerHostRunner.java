@@ -76,7 +76,8 @@ public class CheckerHostRunner {
     };
 
     List<GrocerySlotChecker> checkers = ImmutableList.of(
-        new ShiptSlotChecker(logger),
+        new ShiptSlotChecker(ShiptSlotChecker.Store.RANCH_99, logger),
+        new ShiptSlotChecker(ShiptSlotChecker.Store.TARGET, logger),
         new CostcoSamedaySlotChecker(logger)
     );
 
@@ -87,10 +88,10 @@ public class CheckerHostRunner {
           GrocerySlotChecker.Status status = checker.doCheck();
           if (status.isEdgeTransition) {
             String message = status.notificationMessage.orElse(
-                "slot status: " + (status.slotFound ? "available" : getRandomNoString())) +
-                (status.slotFound ? " go go go" : "");
+                "slot status: " + (status.slotFound ? "available" : getRandomNoString()));
 
-            generateNotification(checker.getDescription(), message);
+            generateNotification(checker.getDescription(),
+                message + (status.slotFound ? " go go go" : ""));
             if (status.slotFound) {
               twitterClient.sendDirectMessage(checker.getDescription() + ": " + message);
             }
@@ -98,7 +99,7 @@ public class CheckerHostRunner {
         } catch (Exception e) {
           e.printStackTrace();
         }
-      }, 10, 240, TimeUnit.SECONDS);
+      }, 10, 200, TimeUnit.SECONDS);
     }
 
     dialog.setCallbacks(new StatusDialog.Callbacks() {

@@ -37,11 +37,11 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
       return displayName.orElseGet(() -> name().replace('_', ' '));
     }
 
-    public String homePage() {
+    String homePage() {
       return String.format("https://www.instacart.com/store/%s/storefront", instacartUrlPath);
     }
 
-    public By deliveryButtonQuery() {
+    By deliveryButtonQuery() {
       return By.cssSelector(String.format("a[href~=\"/%s/info?tab=delivery\"]", instacartUrlPath));
     }
   }

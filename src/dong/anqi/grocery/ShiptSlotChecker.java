@@ -8,12 +8,34 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
-  private boolean lastWasAvailable = false;
+  public enum Store {
+    RANCH_99("99 Ranch"),
+    TARGET("Target"),
+    SAFEWAY("Safeway");
 
-  public ShiptSlotChecker(Logger logger) {
-    super("Shipt", logger);
+    private final String shiptAriaLabel;
+
+    Store(String shiptAriaLabel) {
+      this.shiptAriaLabel = shiptAriaLabel;
+    }
+
+    public String displayName() {
+      return shiptAriaLabel;
+    }
+
+    String shiptAriaLabel() {
+      return shiptAriaLabel;
+    }
+  }
+
+  private final Store store;
+
+  public ShiptSlotChecker(Store store, Logger logger) {
+    super("Shipt " + store.displayName(), logger);
+    this.store = store;
   }
 
   @Override
@@ -50,6 +72,38 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     }
   }
 
+  private void ensureStoreSelection(boolean assumeOnHomePage) {
+    if (!assumeOnHomePage) {
+      driver.get(HOME_PAGE);
+    }
+
+    driver.findElement(By.cssSelector("button[data-test~=\"ShoppingStoreSelect-storeView\"]"))
+        .click();
+
+    Utils.startInterruptibleSleep(Duration.ofSeconds(10));  // This one seems really laggy
+
+    WebElement selectForm =
+        driver.findElement(By.cssSelector("form[data-test~=\"ChooseStore-form\"]"));
+    List<WebElement> storeButtons =
+        selectForm.findElements(By.cssSelector("div[data-test~=\"ChooseStore-store\"]"));
+    storeButtons.stream()
+        .filter(we -> we.getAttribute("aria-label").equals(store.shiptAriaLabel()))
+        .findFirst()
+        .ifPresentOrElse(
+            we -> we.click(),
+            () -> logErr(store.displayName() + " not selectable"));
+
+    Utils.startInterruptibleSleep(Duration.ofSeconds(5));  // This one seems really laggy
+
+    // TODO ensure that store selection stuck
+  }
+
+  private boolean lastWasAvailable = false;
+
+  // This is a global (static) lock, because we're only using one account for Shipt, and the
+  // selected store seems to be a global persisted variable stored per account.
+  private static final AutocloseLock storeSelectMutex = new AutocloseLock(true);
+
   @Override
   public Status doCheck() {
     driver.get(HOME_PAGE);
@@ -61,27 +115,37 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       driver.get(HOME_PAGE);
     }
 
+    // TODO this should be a page loaded waiter in case site is bogged down
+    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
+
     if (!ACCEPTED_HOME_URLS.contains(driver.getCurrentUrl())) {
       logErr(String.format("Failed to log in (URL %s), giving up", driver.getCurrentUrl()));
       return new Status();
     }
 
-    // TODO this should be a page loaded waiter in case site is bogged down
-    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
+    String availabilityText = null;
+    try (AutoCloseable a = storeSelectMutex.lockAndGetResource()) {
+      ensureStoreSelection(true);
 
-    List<WebElement> deliveryElements =
-        driver.findElements(By.cssSelector("div[data-test~=\"NextDeliveryWindow-text\"]"));
-    if (deliveryElements.size() != 1) {
-      logErr("Non-unique NextDeliveryWindow div, found " + deliveryElements.size());
-    }
-    if (deliveryElements.isEmpty()) {
-      logErr("No delivery info found");
-      return new Status();
+      List<WebElement> deliveryElements =
+          driver.findElements(By.cssSelector("div[data-test~=\"NextDeliveryWindow-text\"]"));
+      if (deliveryElements.size() != 1) {
+        logErr("Non-unique NextDeliveryWindow div, found " + deliveryElements.size());
+      }
+      if (deliveryElements.isEmpty()) {
+        logErr("No delivery info found");
+        return new Status();
+      }
+
+      availabilityText =
+          deliveryElements.get(0).findElement(By.cssSelector("[class*=\"body\"]")).getText();
+    } catch (Exception e) {
+      e.printStackTrace();
+      logErr("Unable to take lock for Shipt store selection");
     }
 
-    String availabilityText =
-        deliveryElements.get(0).findElement(By.cssSelector("[class*=\"body\"]")).getText();
-    boolean slotAvailable = !UNAVAILABLE_TEXT.contains(availabilityText);
+    boolean slotAvailable =
+        availabilityText != null && !UNAVAILABLE_TEXT.contains(availabilityText);
 
     Status status = new Status();
     status.slotFound = slotAvailable;

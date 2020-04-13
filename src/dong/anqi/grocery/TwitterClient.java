@@ -25,10 +25,17 @@ public class TwitterClient {
   }
 
   private Twitter twitterInstance = factory.getInstance();
+
+  private static final int MAX_DM_CHARS = 1000;
+
   private static final String DEFAULT_USER = "SafeVarargs";
   private static final long DEFAULT_USER_ID = 2783502499L;
   public boolean sendDirectMessage(String message) {
     try {
+      if (message.length() > MAX_DM_CHARS) {
+        message = message.substring(0, MAX_DM_CHARS);
+      }
+
       DirectMessage result = twitterInstance.sendDirectMessage(DEFAULT_USER, message);
       System.out.println("sender " + result.getSenderId() + " recip " + result.getRecipientId());
       return true;

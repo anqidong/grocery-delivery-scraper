@@ -41,13 +41,13 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
       driver.get(getHomePage());
     }
 
+    // TODO this should be a page loaded waiter in case site is bogged down
+    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
+
     if (!getAcceptedHomeUrls().contains(driver.getCurrentUrl())) {
       logErr(String.format("Failed to log in (URL %s), giving up", driver.getCurrentUrl()));
       return new Status();
     }
-
-    // TODO this should be a page loaded waiter in case site is bogged down
-    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
     List<WebElement> deliveryElements = driver.findElements(getDeliveryTimeButtonQuery());
     if (deliveryElements.size() != 1) {
