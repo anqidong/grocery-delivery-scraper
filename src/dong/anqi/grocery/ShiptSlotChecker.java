@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 
 public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
   public enum Store {
@@ -72,7 +71,9 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     }
   }
 
-  private void ensureStoreSelection(boolean assumeOnHomePage) {
+  private class StoreSelectFailureException extends Exception {}
+
+  private void ensureStoreSelection(boolean assumeOnHomePage) throws StoreSelectFailureException {
     if (!assumeOnHomePage) {
       driver.get(HOME_PAGE);
     }
@@ -80,22 +81,26 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     driver.findElement(By.cssSelector("button[data-test~=\"ShoppingStoreSelect-storeView\"]"))
         .click();
 
-    Utils.startInterruptibleSleep(Duration.ofSeconds(10));  // This one seems really laggy
+    Utils.startInterruptibleSleep(Duration.ofSeconds(7));  // This one seems really laggy
 
     WebElement selectForm =
         driver.findElement(By.cssSelector("form[data-test~=\"ChooseStore-form\"]"));
     List<WebElement> storeButtons =
         selectForm.findElements(By.cssSelector("div[data-test~=\"ChooseStore-store\"]"));
-    storeButtons.stream()
+    Optional<WebElement> usedButtonOr = storeButtons.stream()
         .filter(we -> we.getAttribute("aria-label").equals(store.shiptAriaLabel()))
-        .findFirst()
-        .ifPresentOrElse(
+        .findFirst();
+
+    usedButtonOr.ifPresentOrElse(
             we -> we.click(),
             () -> logErr(store.displayName() + " not selectable"));
+    if (usedButtonOr.isEmpty()) {
+      throw new StoreSelectFailureException();
+    }
 
-    Utils.startInterruptibleSleep(Duration.ofSeconds(5));  // This one seems really laggy
+    Utils.startInterruptibleSleep(Duration.ofSeconds(6));
 
-    // TODO ensure that store selection stuck
+    // TODO read page text again, and ensure that store selection stuck
   }
 
   private boolean lastWasAvailable = false;
@@ -139,6 +144,8 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
 
       availabilityText =
           deliveryElements.get(0).findElement(By.cssSelector("[class*=\"body\"]")).getText();
+    } catch (StoreSelectFailureException e) {
+      return new Status();
     } catch (Exception e) {
       e.printStackTrace();
       logErr("Unable to take lock for Shipt store selection");
