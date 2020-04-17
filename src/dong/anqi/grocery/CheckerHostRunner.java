@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +64,15 @@ public class CheckerHostRunner {
     return NOPE_TEXT.get(random.nextInt(NOPE_TEXT.size()));
   }
 
+  private static Optional<String> getDurationDescription(GrocerySlotChecker.Status status) {
+    return status.timeSinceTransition
+        .map(dur -> {
+          String durationString =
+              String.format("%dd%dh%dm", dur.toDaysPart(), dur.toHoursPart(), dur.toMinutesPart());
+          return status.slotFound ? ("after " + durationString) : ("lasted " + durationString);
+        });
+  }
+
   public static void main(String[] args) {
     System.setProperty("webdriver.chrome.driver", System.getProperty("user.home") + "/bin/chromedriver");
 
@@ -88,7 +98,8 @@ public class CheckerHostRunner {
           GrocerySlotChecker.Status status = checker.doCheck();
           if (status.isEdgeTransition) {
             String message = status.notificationMessage.orElse(
-                "slot status: " + (status.slotFound ? "available" : getRandomNoString()));
+                "slot status: " + (status.slotFound ? "available" : getRandomNoString())) +
+                getDurationDescription(status).map(s -> ", " + s).orElse("");
 
             generateNotification(checker.getDescription(),
                 message + (status.slotFound ? " go go go" : ""));

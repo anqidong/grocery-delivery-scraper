@@ -11,15 +11,13 @@ import java.util.Optional;
 import java.util.Set;
 
 public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecker {
-  private boolean lastWasAvailable = false;
-
   public BaseInstacartSlotChecker(String description, Logger logger) {
     super(description, logger);
   }
 
   @Override
   public final boolean currentlyHasSlot() {
-    return lastWasAvailable;
+    return statusTracker.lastWasAvailable();
   }
 
   protected abstract String getHomePage();
@@ -29,6 +27,8 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
 
   private static final Set<String> UNAVAILABLE_TEXT =
       ImmutableSet.of("Not available", "See delivery times");
+
+  private StatusTracker statusTracker = new StatusTracker();
 
   @Override
   public final Status doCheck() {
@@ -62,9 +62,9 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
         deliveryElements.get(0).findElement(By.tagName("span")).getText();
     boolean slotAvailable = !UNAVAILABLE_TEXT.contains(availabilityText);
 
-    Status status = new Status();
-    status.slotFound = slotAvailable;
-    status.isEdgeTransition = (lastWasAvailable != slotAvailable);
+    Status status = statusTracker.update(slotAvailable ?
+        StatusTracker.State.HAS_SLOT :
+        StatusTracker.State.NO_SLOT);
 
     if (slotAvailable) {
       String message = "Spots available for " + availabilityText.replace("Arrives ", "");
@@ -74,8 +74,6 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
       status.notificationMessage = Optional.empty();
       log("no slots");
     }
-
-    lastWasAvailable = slotAvailable;
 
     return status;
   }

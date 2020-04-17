@@ -39,7 +39,7 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
 
   @Override
   public boolean currentlyHasSlot() {
-    return lastWasAvailable;
+    return statusTracker.lastWasAvailable();
   }
 
   private static final String CREDS_PATH = "creds/shipt.creds";
@@ -103,7 +103,7 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     // TODO read page text again, and ensure that store selection stuck
   }
 
-  private boolean lastWasAvailable = false;
+  private StatusTracker statusTracker = new StatusTracker();
 
   // This is a global (static) lock, because we're only using one account for Shipt, and the
   // selected store seems to be a global persisted variable stored per account.
@@ -154,9 +154,9 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     boolean slotAvailable =
         availabilityText != null && !UNAVAILABLE_TEXT.contains(availabilityText);
 
-    Status status = new Status();
-    status.slotFound = slotAvailable;
-    status.isEdgeTransition = (lastWasAvailable != slotAvailable);
+    Status status = statusTracker.update(slotAvailable ?
+        StatusTracker.State.HAS_SLOT :
+        StatusTracker.State.NO_SLOT);
 
     if (slotAvailable) {
       String message = "Spots available for " + availabilityText;
@@ -166,8 +166,6 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       status.notificationMessage = Optional.empty();
       log("no slots");
     }
-
-    lastWasAvailable = slotAvailable;
 
     return status;
   }

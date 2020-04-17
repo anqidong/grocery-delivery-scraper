@@ -12,8 +12,9 @@ public interface GrocerySlotChecker extends AutoCloseable {
   public static class Status {  // struct-like
     public boolean slotFound = false;
     public boolean isEdgeTransition = false;
+    public Optional<Duration> timeSinceTransition = Optional.empty();
 
-    public Optional<String> notificationMessage;
+    public Optional<String> notificationMessage = Optional.empty();
   }
 
   Status doCheck();
