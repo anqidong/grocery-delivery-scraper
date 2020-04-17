@@ -36,6 +36,7 @@ public class TwitterClient {
       }
 
       DirectMessage result = twitterInstance.sendDirectMessage(DEFAULT_USER_ID, message);
+      System.out.printf("Sent Twitter DM to %s\n", result.getRecipientId());
       return true;
     } catch (TwitterException te) {
       te.printStackTrace();

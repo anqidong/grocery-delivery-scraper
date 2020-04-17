@@ -75,7 +75,7 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
       log("no slots");
     }
 
-    slotAvailable = lastWasAvailable;
+    lastWasAvailable = slotAvailable;
 
     return status;
   }
