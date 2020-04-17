@@ -96,7 +96,7 @@ public class CheckerHostRunner {
     try {
       Files.createDirectories(logDirectory);
       writer = new BufferedWriter(new FileWriter(
-          logDirectory.resolve("logs_" + FILE_NAME_FORMAT.format(LocalDateTime.now())).toFile()));
+          logDirectory.resolve("logs_" + FILE_NAME_FORMAT.format(LocalDateTime.now()) + ".txt").toFile()));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -108,6 +108,7 @@ public class CheckerHostRunner {
         try {
           writer.write(s);
           writer.newLine();
+          writer.flush();
         } catch (IOException e) {
           e.printStackTrace();
         }
