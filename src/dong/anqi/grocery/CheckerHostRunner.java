@@ -4,9 +4,17 @@ import com.google.common.collect.ImmutableList;
 
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -73,15 +81,36 @@ public class CheckerHostRunner {
         });
   }
 
+  private static final DateTimeFormatter FILE_NAME_FORMAT =
+      DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+
   public static void main(String[] args) {
-    System.setProperty("webdriver.chrome.driver", System.getProperty("user.home") + "/bin/chromedriver");
+    final String homeDir = System.getProperty("user.home");
+    System.setProperty("webdriver.chrome.driver",
+        Paths.get(homeDir, "bin", "chromedriver").toString());
 
     StatusDialog dialog = new StatusDialog();
-    TwitterClient twitterClient = new TwitterClient();
+
+    Path logDirectory = Paths.get(homeDir, "tmp", "grocery-logs");
+    BufferedWriter writer;
+    try {
+      Files.createDirectories(logDirectory);
+      writer = new BufferedWriter(new FileWriter(
+          logDirectory.resolve("logs_" + FILE_NAME_FORMAT.format(LocalDateTime.now())).toFile()));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
     Logger logger = new Logger() {
       @Override
       public void log(String s) {
         dialog.logText(s);
+        try {
+          writer.write(s);
+          writer.newLine();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
     };
 
@@ -91,6 +120,7 @@ public class CheckerHostRunner {
         new CostcoSamedaySlotChecker(logger)
     );
 
+    TwitterClient twitterClient = new TwitterClient();
     ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(3);
     for (GrocerySlotChecker checker : checkers) {
       threadPoolExecutor.scheduleAtFixedRate(() -> {
