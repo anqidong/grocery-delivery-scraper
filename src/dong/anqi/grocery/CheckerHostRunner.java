@@ -117,6 +117,8 @@ public class CheckerHostRunner {
     List<GrocerySlotChecker> checkers = ImmutableList.of(
         new ShiptSlotChecker(ShiptSlotChecker.Store.RANCH_99, logger),
         new ShiptSlotChecker(ShiptSlotChecker.Store.TARGET, logger),
+        new InstacartSlotChecker(InstacartSlotChecker.Store.SPROUTS, logger),
+        new InstacartSlotChecker(InstacartSlotChecker.Store.H_MART, logger),
         new CostcoSamedaySlotChecker(logger)
     );
 

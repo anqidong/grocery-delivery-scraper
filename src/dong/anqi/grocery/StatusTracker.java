@@ -26,7 +26,7 @@ public class StatusTracker {
     GrocerySlotChecker.Status status = new GrocerySlotChecker.Status();
 
     trackerState.ifPresentOrElse(currState -> {
-      status.isEdgeTransition = (currState == newState);
+      status.isEdgeTransition = (currState != newState);
       if (status.isEdgeTransition) {
         status.timeSinceTransition = Optional.of(Duration.between(stateChangeTime, Instant.now()));
         stateChangeTime = Instant.now();
