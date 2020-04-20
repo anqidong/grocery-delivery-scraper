@@ -96,12 +96,12 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
 
   private StatusCheckOutput checkAvailabilityOnHomePage() {
     List<WebElement> deliveryElements = driver.findElements(getDeliveryTimeButtonQuery());
-    if (deliveryElements.size() != 1) {
-      logErr("Non-unique delivery time button, found " + deliveryElements.size());
-    }
     if (deliveryElements.isEmpty()) {
       logErr("No delivery info found on homepage");
       return new StatusCheckOutput(StatusCheckOutput.Result.SCRAPE_ERROR);
+    }
+    if (deliveryElements.size() != 1) {
+      logErr("Non-unique delivery time button, found " + deliveryElements.size());
     }
 
     String availabilityText =
@@ -128,13 +128,13 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
   private StatusCheckOutput checkAvailabilityOnDeliveryInfoPage() {
     List<WebElement> reactPanelElements = driver.findElements(
         By.cssSelector("div[aria-label*=\"retailer info modal\" i] div#react-tabs-1"));
-    if (reactPanelElements.size() != 1) {
-      // This contains an ID selector LOL, so this should never happen
-      logErr("Non-unique delivery times panel, found " + reactPanelElements.size());
-    }
     if (reactPanelElements.isEmpty()) {
       logErr("No delivery info panel found");
       return new StatusCheckOutput(StatusCheckOutput.Result.SCRAPE_ERROR);
+    }
+    if (reactPanelElements.size() != 1) {
+      // This contains an ID selector LOL, so this should never happen
+      logErr("Non-unique delivery times panel, found " + reactPanelElements.size());
     }
 
     final WebElement panelElement = reactPanelElements.get(0);

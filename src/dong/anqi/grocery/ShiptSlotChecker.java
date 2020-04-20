@@ -134,12 +134,12 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
 
       List<WebElement> deliveryElements =
           driver.findElements(By.cssSelector("div[data-test~=\"NextDeliveryWindow-text\"]"));
-      if (deliveryElements.size() != 1) {
-        logErr("Non-unique NextDeliveryWindow div, found " + deliveryElements.size());
-      }
       if (deliveryElements.isEmpty()) {
         logErr("No delivery info found");
         return Optional.empty();
+      }
+      if (deliveryElements.size() != 1) {
+        logErr("Non-unique NextDeliveryWindow div, found " + deliveryElements.size());
       }
 
       availabilityText =
