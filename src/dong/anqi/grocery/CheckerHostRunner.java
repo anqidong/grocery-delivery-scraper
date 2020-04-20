@@ -143,7 +143,7 @@ public class CheckerHostRunner {
       }
     };
 
-    ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(3);
+    ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(4);
     for (GrocerySlotChecker checker : checkers) {
       threadPoolExecutor.scheduleAtFixedRate(() -> {
         try {

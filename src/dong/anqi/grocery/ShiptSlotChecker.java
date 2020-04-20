@@ -65,7 +65,7 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       driver.findElement(By.id("password")).sendKeys(creds.pass);
       driver.findElement(By.id("password")).submit();
 
-      Utils.startInterruptibleSleep(Duration.ofSeconds(5));
+      Utils.startInterruptibleSleep(Duration.ofSeconds(8));
 
       log(String.format("URL %s after login attempt", driver.getCurrentUrl()));
     }
@@ -98,7 +98,7 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       throw new StoreSelectFailureException();
     }
 
-    Utils.startInterruptibleSleep(Duration.ofSeconds(6));
+    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
     // TODO read page text again, and ensure that store selection stuck
   }
@@ -116,7 +116,6 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       log(String.format("URL navigated to %s, retrying login?", driver.getCurrentUrl()));
 
       executeLogin();
-      Utils.startInterruptibleSleep(Duration.ofSeconds(10));
       driver.get(HOME_PAGE);
     }
 

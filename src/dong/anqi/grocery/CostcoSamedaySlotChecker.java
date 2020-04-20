@@ -66,7 +66,7 @@ public final class CostcoSamedaySlotChecker extends BaseInstacartSlotChecker {
       driver.findElement(By.id("logonPassword")).sendKeys(creds.pass);
       driver.findElement(By.id("logonPassword")).submit();
 
-      Utils.startInterruptibleSleep(Duration.ofSeconds(5));
+      Utils.startInterruptibleSleep(Duration.ofSeconds(6));
 
       log(String.format("URL %s after login attempt", driver.getCurrentUrl()));
     }

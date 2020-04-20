@@ -54,7 +54,7 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
       log(String.format("URL navigated to %s, retrying login?", driver.getCurrentUrl()));
 
       executeLogin();
-      Utils.startInterruptibleSleep(Duration.ofSeconds(10));
+      Utils.startInterruptibleSleep(Duration.ofSeconds(3));
       driver.get(requestedUrl);
     }
 

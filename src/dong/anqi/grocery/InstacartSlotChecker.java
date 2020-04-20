@@ -112,7 +112,7 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
       passField.sendKeys(creds.pass);
       passField.sendKeys("\n");
 
-      Utils.startInterruptibleSleep(Duration.ofSeconds(5));
+      Utils.startInterruptibleSleep(Duration.ofSeconds(6));
 
       log(String.format("URL %s after login attempt", driver.getCurrentUrl()));
     }
