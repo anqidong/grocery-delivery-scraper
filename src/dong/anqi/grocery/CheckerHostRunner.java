@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,13 +12,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class CheckerHostRunner {
   private static void rateLimitSleep() {
@@ -116,31 +119,49 @@ public class CheckerHostRunner {
     };
 
     List<GrocerySlotChecker> checkers = ImmutableList.of(
-        new ShiptSlotChecker(ShiptSlotChecker.Store.RANCH_99, logger),
-        new ShiptSlotChecker(ShiptSlotChecker.Store.TARGET, logger),
-        // new InstacartSlotChecker(InstacartSlotChecker.Store.SPROUTS, logger),
+        // new ShiptSlotChecker(ShiptSlotChecker.Store.RANCH_99, logger),
+        // new ShiptSlotChecker(ShiptSlotChecker.Store.TARGET, logger),
+        // new InstacartSlotChecker(InstacartSlotChecker.Store.SPROUTS, logger)
+        new InstacartSlotChecker(InstacartSlotChecker.Store.TOTAL_WINE, logger)
         // new InstacartSlotChecker(InstacartSlotChecker.Store.H_MART, logger),
-        new CostcoSamedaySlotChecker(logger)
+        // new CostcoSamedaySlotChecker(logger)
     );
 
     TwitterClient twitterClient = new TwitterClient();
+
+    // TODO this needs to be in an effing class mate
+    Map<GrocerySlotChecker, Instant> rateLimitTracker = new HashMap<>();
+    Consumer<GrocerySlotChecker> genericFailure = checker -> {
+      Duration timeSinceLast = Duration.between(
+          rateLimitTracker.getOrDefault(checker, Instant.EPOCH), Instant.now());
+      if (timeSinceLast.toMinutes() > 120) {
+        twitterClient.sendDirectMessage(checker.getDescription() + " failed to scrape");
+        rateLimitTracker.put(checker, Instant.now());
+      } else {
+        System.out.printf("%s Scrape failure for %s, rate-limiting Twitter",
+            Utils.nowString(), checker.getDescription());
+      }
+    };
+
     ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(3);
     for (GrocerySlotChecker checker : checkers) {
       threadPoolExecutor.scheduleAtFixedRate(() -> {
         try {
-          GrocerySlotChecker.Status status = checker.doCheck();
-          if (status.isEdgeTransition) {
-            String message = status.notificationMessage.orElse(
-                "slot status: " + (status.slotFound ? "available" : getRandomNoString())) +
-                getDurationDescription(status).map(s -> ", " + s).orElse("");
+          checker.doCheck().ifPresentOrElse(status -> {
+            if (status.isEdgeTransition) {
+              String message = status.notificationMessage.orElse(
+                  "slot status: " + (status.slotFound ? "available" : getRandomNoString())) +
+                  getDurationDescription(status).map(s -> ", " + s).orElse("");
 
-            generateNotification(checker.getDescription(),
-                message + (status.slotFound ? " go go go" : ""));
-            if (status.slotFound) {
-              twitterClient.sendDirectMessage(checker.getDescription() + ": " + message);
+              generateNotification(checker.getDescription(),
+                  message + (status.slotFound ? " go go go" : ""));
+              if (status.slotFound) {
+                twitterClient.sendDirectMessage(checker.getDescription() + ": " + message);
+              }
             }
-          }
+          }, () -> genericFailure.accept(checker));
         } catch (Exception e) {
+          twitterClient.sendDirectMessage(checker.getDescription() + " crashed");
           e.printStackTrace();
         }
       }, 10, 200, TimeUnit.SECONDS);

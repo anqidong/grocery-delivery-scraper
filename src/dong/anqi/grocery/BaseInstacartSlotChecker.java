@@ -174,19 +174,19 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
   }
 
   @Override
-  public final Status doCheck() {
+  public final Optional<Status> doCheck() {
     if (!tryToLoadPageWithAttemptedLogin(getHomePage(), getAcceptedHomeUrls())) {
       logErr(String.format("Failed to log in (URL %s), giving up", driver.getCurrentUrl()));
-      return new Status();
+      return Optional.empty();
     }
 
     {
       StatusCheckOutput homePageStatus = checkAvailabilityOnHomePage();
       if (homePageStatus.result == StatusCheckOutput.Result.DEFINITE_GOOD) {
-        return homePageStatus.status;
+        return Optional.of(homePageStatus.status);
       } else if (homePageStatus.result == StatusCheckOutput.Result.DEFINITE_FAIL) {
         log("no slots");
-        return statusTracker.update(StatusTracker.State.NO_SLOT);
+        return Optional.of(statusTracker.update(StatusTracker.State.NO_SLOT));
       }
     }
 
@@ -194,20 +194,20 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
         getDeliveryInfoPage(), ImmutableSet.of(getDeliveryInfoPage()))) {
       logErr(String.format("Failed to load delivery info page (URL %s), giving up",
           driver.getCurrentUrl()));
-      return new Status();
+      return Optional.empty();
     }
 
     {
       StatusCheckOutput deliveryInfoPageStatus = checkAvailabilityOnDeliveryInfoPage();
       if (deliveryInfoPageStatus.result == StatusCheckOutput.Result.DEFINITE_GOOD) {
-        return deliveryInfoPageStatus.status;
+        return Optional.of(deliveryInfoPageStatus.status);
       } else if (deliveryInfoPageStatus.result == StatusCheckOutput.Result.DEFINITE_FAIL) {
         log("no slots");
-        return statusTracker.update(StatusTracker.State.NO_SLOT);
+        return Optional.of(statusTracker.update(StatusTracker.State.NO_SLOT));
       }
     }
 
     // Final result was indeterminate; don't update `statusTracker`.
-    return new Status();
+    return Optional.empty();
   }
 }

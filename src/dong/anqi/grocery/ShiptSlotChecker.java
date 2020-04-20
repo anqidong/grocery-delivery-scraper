@@ -110,7 +110,7 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
   private static final AutocloseLock storeSelectMutex = new AutocloseLock(true);
 
   @Override
-  public Status doCheck() {
+  public Optional<Status> doCheck() {
     driver.get(HOME_PAGE);
     if (!ACCEPTED_HOME_URLS.contains(driver.getCurrentUrl())) {
       log(String.format("URL navigated to %s, retrying login?", driver.getCurrentUrl()));
@@ -125,7 +125,7 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
 
     if (!ACCEPTED_HOME_URLS.contains(driver.getCurrentUrl())) {
       logErr(String.format("Failed to log in (URL %s), giving up", driver.getCurrentUrl()));
-      return new Status();
+      return Optional.empty();
     }
 
     String availabilityText = null;
@@ -139,13 +139,13 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       }
       if (deliveryElements.isEmpty()) {
         logErr("No delivery info found");
-        return new Status();
+        return Optional.empty();
       }
 
       availabilityText =
           deliveryElements.get(0).findElement(By.cssSelector("[class*=\"body\"]")).getText();
     } catch (StoreSelectFailureException e) {
-      return new Status();
+      return Optional.empty();
     } catch (Exception e) {
       e.printStackTrace();
       logErr("Unable to take lock for Shipt store selection");
@@ -167,6 +167,6 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
       log("no slots");
     }
 
-    return status;
+    return Optional.of(status);
   }
 }

@@ -17,7 +17,12 @@ public interface GrocerySlotChecker extends AutoCloseable {
     public Optional<String> notificationMessage = Optional.empty();
   }
 
-  Status doCheck();
+  /**
+   *
+   * @return Present status if check accomplished something, empty optional if the check failed and
+   *         was indeterminate.
+   */
+  Optional<Status> doCheck();
 
   default Duration getPreferredCheckFrequency() { return Duration.ofMinutes(4); }
 }
