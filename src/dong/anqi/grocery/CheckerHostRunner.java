@@ -123,7 +123,8 @@ public class CheckerHostRunner {
         new ShiptSlotChecker(ShiptSlotChecker.Store.TARGET, logger),
         new InstacartSlotChecker(InstacartSlotChecker.Store.SPROUTS, logger),
         new InstacartSlotChecker(InstacartSlotChecker.Store.H_MART, logger),
-        new CostcoSamedaySlotChecker(logger)
+        new CostcoSamedaySlotChecker(logger),
+        new WeeeDateAvailableChecker(false, logger)
     );
 
     TwitterClient twitterClient = new TwitterClient();
