@@ -25,6 +25,8 @@ public final class CostcoSamedaySlotChecker extends BaseInstacartSlotChecker {
 
   private static final String LOGIN_PAGE = "https://www.costco.com/logon-instacart";
   private static final String HOME_PAGE = "https://sameday.costco.com/store/costco/storefront";
+  private static final String DELIVERY_INFO_PAGE =
+      "https://sameday.costco.com/store/costco/info?tab=delivery";
 
   private static final Set<String> ACCEPTED_HOME_URLS = ImmutableSet
       .of(HOME_PAGE, "https://sameday.costco.com/store/");
@@ -43,6 +45,11 @@ public final class CostcoSamedaySlotChecker extends BaseInstacartSlotChecker {
   @Override
   protected @NotNull By getDeliveryTimeButtonQuery() {
     return By.cssSelector("a[href~=\"/costco/info?tab=delivery\"]");
+  }
+
+  @Override
+  protected String getDeliveryInfoPage() {
+    return DELIVERY_INFO_PAGE;
   }
 
   @Override

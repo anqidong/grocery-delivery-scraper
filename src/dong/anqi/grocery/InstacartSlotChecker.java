@@ -44,6 +44,11 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
     By deliveryButtonQuery() {
       return By.cssSelector(String.format("a[href~=\"/%s/info?tab=delivery\"]", instacartUrlPath));
     }
+
+    String deliveryInfoPage() {
+      return String.format(
+          "https://www.instacart.com/store/%s/info?tab=delivery", instacartUrlPath);
+    }
   }
 
   private final Store store;
@@ -69,6 +74,11 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
   @Override
   protected @NotNull By getDeliveryTimeButtonQuery() {
     return store.deliveryButtonQuery();
+  }
+
+  @Override
+  protected String getDeliveryInfoPage() {
+    return store.deliveryInfoPage();
   }
 
   @Override

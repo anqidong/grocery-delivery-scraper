@@ -1,18 +1,18 @@
 package dong.anqi.grocery;
 
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 public abstract class AbstractGrocerySlotChecker implements AutoCloseable, GrocerySlotChecker {
   private final String description;
-  protected final WebDriver driver;
+  protected final RemoteWebDriver driver;
   protected final Logger logger;
 
-  private WebDriver createDriver() {
+  private RemoteWebDriver createDriver() {
     // sendKeys does not work with headless mode :(
     ChromeOptions chromeOptions = new ChromeOptions(); // .addArguments("--headless");
-    WebDriver driver = new ChromeDriver(chromeOptions);
+    RemoteWebDriver driver = new ChromeDriver(chromeOptions);
     return driver;
   }
 
