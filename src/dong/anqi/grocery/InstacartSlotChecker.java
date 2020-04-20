@@ -84,7 +84,7 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
 
   private static final String CREDS_PATH = "creds/instacart-google-oauth.creds";
   private static final String LOGIN_START_PAGE = "https://www.instacart.com/";
-  private static final String OAUTH_PAGE_PREFIX = "https://accounts.google.com/signin/v2";
+  private static final String OAUTH_PAGE_PREFIX = "https://accounts.google.com/signin/";
 
   @Override
   protected void executeLogin() {

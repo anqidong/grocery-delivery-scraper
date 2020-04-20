@@ -127,7 +127,7 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
 
   private StatusCheckOutput checkAvailabilityOnDeliveryInfoPage() {
     List<WebElement> reactPanelElements = driver.findElements(
-        By.cssSelector("div[aria-label~=\"retailer info modal\"] div#react-tabs-1"));
+        By.cssSelector("div[aria-label*=\"retailer info modal\" i] div#react-tabs-1"));
     if (reactPanelElements.size() != 1) {
       // This contains an ID selector LOL, so this should never happen
       logErr("Non-unique delivery times panel, found " + reactPanelElements.size());
@@ -142,7 +142,7 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
       return new StatusCheckOutput(StatusCheckOutput.Result.DEFINITE_FAIL);
     }
 
-    List<WebElement> deliverySlotElements = panelElement.findElements(By.xpath(
+    List<WebElement> deliverySlotElements = panelElement.findElements(By.cssSelector(
         // "div > div > div > div > div:nth-child(2) > div > div > div"
         "div.module-wrapper:nth-child(2) > div > div > div"
     ));

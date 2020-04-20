@@ -32,6 +32,8 @@ public class StatusTracker {
         stateChangeTime = Instant.now();
       }
     }, () -> {
+      // No need to notify the edge transition here; we should be manually watching the status
+      // anyway since we are starting up the program
       status.isEdgeTransition = false;
       stateChangeTime = Instant.now();
     });
