@@ -64,15 +64,6 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
     return acceptedUrls.contains(driver.getCurrentUrl());
   }
 
-  private String getInnerHtml(WebElement element) {
-    String htmlUsingAttr = element.getAttribute("innerHTML");
-    if (htmlUsingAttr != null) {
-      return htmlUsingAttr;
-    }
-
-    return (String) (driver.executeScript("return arguments[0].innerHTML;", element));
-  }
-
   private static class StatusCheckOutput {
     enum Result {DEFINITE_GOOD, DEFINITE_FAIL, INDETERMINATE, SCRAPE_ERROR}
 
