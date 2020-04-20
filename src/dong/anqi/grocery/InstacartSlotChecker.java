@@ -82,9 +82,8 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
     return store.deliveryInfoPage();
   }
 
-  private static final String CREDS_PATH = "creds/instacart-google-oauth.creds";
+  private static final String CREDS_PATH = "creds/instacart.creds";
   private static final String LOGIN_START_PAGE = "https://www.instacart.com/";
-  private static final String OAUTH_PAGE_PREFIX = "https://accounts.google.com/signin/";
 
   @Override
   protected void executeLogin() {
@@ -94,49 +93,25 @@ public final class InstacartSlotChecker extends BaseInstacartSlotChecker {
     } else {
       Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
-      {
-        List<WebElement> loginButtons = driver.findElements(By.tagName("button")).stream()
-            .filter(el -> getInnerHtml(el).equals("Log in"))
-            .collect(Collectors.toUnmodifiableList());
-        if (loginButtons.isEmpty()) {
-          logErr("No log in button found; giving up");
-          return;
-        } else if (loginButtons.size() != 1) {
-          logErr("Multiple log in buttons found, randomly choosing one");
-        }
-        loginButtons.get(0).click();
+      List<WebElement> loginButtons = driver.findElements(By.tagName("button")).stream()
+          .filter(el -> getInnerHtml(el).equals("Log in"))
+          .collect(Collectors.toUnmodifiableList());
+      if (loginButtons.isEmpty()) {
+        logErr("No log in button found; giving up");
+        return;
+      } else if (loginButtons.size() != 1) {
+        logErr("Multiple log in buttons found, randomly choosing one");
       }
+      loginButtons.get(0).click();
 
       Utils.startInterruptibleSleep(Duration.ofMillis(500));
-      {
-        List<WebElement> googleButtons = driver.findElements(By.tagName("button")).stream()
-            .filter(el -> getInnerHtml(el).contains("Google"))
-            .collect(Collectors.toUnmodifiableList());
-        if (googleButtons.isEmpty()) {
-          logErr("No Google OAuth button found; giving up");
-          return;
-        } else if (googleButtons.size() != 1) {
-          logErr("Multiple Google OAuth buttons found, randomly choosing one");
-        }
-        googleButtons.get(0).click();
-      }
-
-      Utils.startInterruptibleSleep(Duration.ofSeconds(5));
-      if (!driver.getCurrentUrl().startsWith(OAUTH_PAGE_PREFIX)) {
-        logErr(String.format(
-            "Unexpected Google OAuth page %s, trying anyways", driver.getCurrentUrl()));
-      }
-
       Utils.Credentials creds = Utils.readCredentials(CREDS_PATH);
 
-      // TODO: Set values using JavascriptExecutor so we can run headless
-      driver.findElement(By.id("identifierId")).sendKeys(creds.user);
-      driver.findElement(By.id("identifierId")).sendKeys("\n");
-      Utils.startInterruptibleSleep(Duration.ofMillis(1500));
+      WebElement passField = driver.findElement(By.id("nextgen-authenticate.all.log_in_password"));
+      driver.findElement(By.id("nextgen-authenticate.all.log_in_email")).sendKeys(creds.user);
+      passField.sendKeys(creds.pass);
+      passField.sendKeys("\n");
 
-      WebElement passwordElement = driver.findElement(By.cssSelector("[name=\"password\"]"));
-      passwordElement.sendKeys(creds.pass);
-      passwordElement.sendKeys("\n");
       Utils.startInterruptibleSleep(Duration.ofSeconds(5));
 
       log(String.format("URL %s after login attempt", driver.getCurrentUrl()));
