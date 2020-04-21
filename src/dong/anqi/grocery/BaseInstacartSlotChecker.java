@@ -138,8 +138,13 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
     }
 
     final WebElement panelElement = reactPanelElements.get(0);
-    if (getInnerHtml(panelElement).contains("No delivery times available")) {
-      return new StatusCheckOutput(StatusCheckOutput.Result.DEFINITE_FAIL);
+    {
+      final String innerHtml = getInnerHtml(panelElement);
+      if (innerHtml.contains("No delivery times available") ||
+              innerHtml.contains("All delivery windows are full") ||
+              innerHtml.contains("assets/modules/errors/heavy_load")) {
+        return new StatusCheckOutput(StatusCheckOutput.Result.DEFINITE_FAIL);
+      }
     }
 
     List<WebElement> deliverySlotElements = panelElement.findElements(By.cssSelector(
@@ -159,13 +164,27 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
         .map(el -> el.findElement(By.tagName("div")))  // gets first div sub-child
         .map(el -> el.getText()).findFirst();
 
+    // TODO(anqid): Resolve duplicate code
+    long daysCount = deliverySlotElements.stream()
+            .map(el -> el.findElement(By.tagName("div")))  // gets first div child
+            .filter(el -> el.findElements(By.tagName("div")).isEmpty())  // has no further children
+            .filter(el ->
+                    Integer.parseInt(el.getCssValue("font-weight")) >= 500) // element is bold
+            .count();
+    long slotsCount = deliverySlotElements.stream()
+            .map(el -> el.findElement(By.tagName("div")))  // gets first div child
+            .filter(el -> el.getCssValue("display").equals("flex")) // element is flex
+            .count();
+
     if (header.isEmpty() && detail.isEmpty()) {
       return new StatusCheckOutput(StatusCheckOutput.Result.SCRAPE_ERROR);
     } else {
       Status status = statusTracker.update(StatusTracker.State.HAS_SLOT);
 
-      String message = "Spots available for " +
-          header.map(s -> s + " ").orElse("") + detail.orElse("");
+      String message = String.format("Spots available for %s%s & %d more on %d days",
+              header.map(s -> s + " ").orElse(""),
+              detail.orElse(""),
+              slotsCount - 1, daysCount - 1);
       status.notificationMessage = Optional.of(message);
       log(message);
 
@@ -175,6 +194,23 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
 
   @Override
   public final Optional<Status> doCheck() {
+    if (!tryToLoadPageWithAttemptedLogin(
+            getDeliveryInfoPage(), ImmutableSet.of(getDeliveryInfoPage()))) {
+      logErr(String.format("Failed to load delivery info page (URL %s), giving up",
+              driver.getCurrentUrl()));
+      return Optional.empty();
+    }
+
+    {
+      StatusCheckOutput deliveryInfoPageStatus = checkAvailabilityOnDeliveryInfoPage();
+      if (deliveryInfoPageStatus.result == StatusCheckOutput.Result.DEFINITE_GOOD) {
+        return Optional.of(deliveryInfoPageStatus.status);
+      } else if (deliveryInfoPageStatus.result == StatusCheckOutput.Result.DEFINITE_FAIL) {
+        log("no slots");
+        return Optional.of(statusTracker.update(StatusTracker.State.NO_SLOT));
+      }
+    }
+
     if (!tryToLoadPageWithAttemptedLogin(getHomePage(), getAcceptedHomeUrls())) {
       logErr(String.format("Failed to log in (URL %s), giving up", driver.getCurrentUrl()));
       return Optional.empty();
@@ -185,23 +221,6 @@ public abstract class BaseInstacartSlotChecker extends AbstractGrocerySlotChecke
       if (homePageStatus.result == StatusCheckOutput.Result.DEFINITE_GOOD) {
         return Optional.of(homePageStatus.status);
       } else if (homePageStatus.result == StatusCheckOutput.Result.DEFINITE_FAIL) {
-        log("no slots");
-        return Optional.of(statusTracker.update(StatusTracker.State.NO_SLOT));
-      }
-    }
-
-    if (!tryToLoadPageWithAttemptedLogin(
-        getDeliveryInfoPage(), ImmutableSet.of(getDeliveryInfoPage()))) {
-      logErr(String.format("Failed to load delivery info page (URL %s), giving up",
-          driver.getCurrentUrl()));
-      return Optional.empty();
-    }
-
-    {
-      StatusCheckOutput deliveryInfoPageStatus = checkAvailabilityOnDeliveryInfoPage();
-      if (deliveryInfoPageStatus.result == StatusCheckOutput.Result.DEFINITE_GOOD) {
-        return Optional.of(deliveryInfoPageStatus.status);
-      } else if (deliveryInfoPageStatus.result == StatusCheckOutput.Result.DEFINITE_FAIL) {
         log("no slots");
         return Optional.of(statusTracker.update(StatusTracker.State.NO_SLOT));
       }

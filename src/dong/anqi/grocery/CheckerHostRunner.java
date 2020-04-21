@@ -138,7 +138,7 @@ public class CheckerHostRunner {
         twitterClient.sendDirectMessage(checker.getDescription() + " failed to scrape");
         rateLimitTracker.put(checker, Instant.now());
       } else {
-        System.out.printf("%s Scrape failure for %s, rate-limiting Twitter",
+        System.out.printf("%s Scrape failure for %s, rate-limiting Twitter\n",
             Utils.nowString(), checker.getDescription());
       }
     };
