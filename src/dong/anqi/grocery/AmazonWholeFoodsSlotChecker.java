@@ -9,32 +9,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
-  public enum Store {
-    RANCH_99("99 Ranch"),
-    TARGET("Target"),
-    SAFEWAY("Safeway");
-
-    private final String shiptAriaLabel;
-
-    Store(String shiptAriaLabel) {
-      this.shiptAriaLabel = shiptAriaLabel;
-    }
-
-    public String displayName() {
-      return shiptAriaLabel;
-    }
-
-    String shiptAriaLabel() {
-      return shiptAriaLabel;
-    }
-  }
-
-  private final Store store;
-
-  public ShiptSlotChecker(Store store, Logger logger) {
-    super("Shipt " + store.displayName(), logger);
-    this.store = store;
+public class AmazonWholeFoodsSlotChecker extends AbstractGrocerySlotChecker {
+  public AmazonWholeFoodsSlotChecker(Store store, Logger logger) {
+    super("Whole Foods", logger);
   }
 
   @Override
@@ -42,15 +19,14 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     return statusTracker.lastWasAvailable();
   }
 
-  private static final String CREDS_PATH = "creds/shipt.creds";
+  private static final String CREDS_PATH = "creds/amazon.creds";
 
-  private static final String LOGIN_PAGE = "https://shop.shipt.com/login";
-  private static final String HOME_PAGE = "https://shop.shipt.com/";
+  private static final String LOGIN_PAGE = "https://shop.shipt.com/login";  // FIXME
+  private static final String HOME_PAGE =
+      "https://www.amazon.com/alm/storefront/ref=grocery_wholefoods?almBrandId=VUZHIFdob2xlIEZvb2Rz";
 
-  private static final Set<String> ACCEPTED_HOME_URLS =
-      ImmutableSet.of("https://shop.shipt.com/", "https://shop.shipt.com");
   private static final Set<String> UNAVAILABLE_TEXT =
-      ImmutableSet.of("Not available", "Check back soon");
+      ImmutableSet.of("sold out");
 
   private void executeLogin() {
     driver.get(LOGIN_PAGE);
@@ -71,43 +47,16 @@ public class ShiptSlotChecker extends AbstractGrocerySlotChecker {
     }
   }
 
-  private class StoreSelectFailureException extends Exception {}
-
-  private void ensureStoreSelection(boolean assumeOnHomePage) throws StoreSelectFailureException {
-    if (!assumeOnHomePage) {
-      driver.get(HOME_PAGE);
-    }
-
-    driver.findElement(By.cssSelector("button[data-test~=\"ShoppingStoreSelect-storeView\"]"))
-        .click();
-
-    Utils.startInterruptibleSleep(Duration.ofSeconds(7));  // This one seems really laggy
-
-    WebElement selectForm =
-        driver.findElement(By.cssSelector("form[data-test~=\"ChooseStore-form\"]"));
-    List<WebElement> storeButtons =
-        selectForm.findElements(By.cssSelector("div[data-test~=\"ChooseStore-store\"]"));
-    Optional<WebElement> usedButtonOr = storeButtons.stream()
-        .filter(we -> we.getAttribute("aria-label").equals(store.shiptAriaLabel()))
-        .findFirst();
-
-    usedButtonOr.ifPresentOrElse(
-            we -> we.click(),
-            () -> logErr(store.displayName() + " not selectable"));
-    if (usedButtonOr.isEmpty()) {
-      throw new StoreSelectFailureException();
-    }
-
-    Utils.startInterruptibleSleep(Duration.ofSeconds(5));
-
-    // TODO read page text again, and ensure that store selection stuck
-  }
-
   private StatusTracker statusTracker = new StatusTracker();
 
-  // This is a global (static) lock, because we're only using one account for Shipt, and the
-  // selected store seems to be a global persisted variable stored per account.
-  private static final AutocloseLock storeSelectMutex = new AutocloseLock(true);
+  // //*[@id="a-page"]/div[2]/div/div[1]
+  // .alm-storefront-reserved-desktop
+
+  /*
+  <span class="a-size-medium naw-widget-banner-action-no-availability a-text-bold">
+                    temporarily sold out
+                </span>
+   */
 
   @Override
   public Optional<Status> doCheck() {
